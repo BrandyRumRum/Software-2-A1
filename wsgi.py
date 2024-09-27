@@ -3,7 +3,7 @@ from flask import Flask
 from flask.cli import with_appcontext, AppGroup
 
 from App.database import db, get_migrate
-from App.models import User
+from App.models import *
 from App.main import create_app
 from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
 
@@ -67,3 +67,78 @@ def user_tests_command(type):
     
 
 app.cli.add_command(test)
+
+
+def add_views(app):
+    for view in views:
+        app.register_blueprint(view)
+
+def create_app(overrides={}):
+    app = Flask(__name__, static_url_path='/static')
+    load_config(app, overrides)
+    CORS(app)
+    add_auth_context(app)
+    photos = UploadSet('photos', TEXT + DOCUMENTS + IMAGES)
+    configure_uploads(app, photos)
+    add_views(app)
+    init_db(app)
+    jwt = setup_jwt(app)
+    setup_admin(app)
+    @jwt.invalid_token_loader
+    @jwt.unauthorized_loader
+    def custom_unauthorized_response(error):
+        return render_template('401.html', error=error), 401
+    app.app_context().push()
+    return app
+
+
+
+
+# Command to create a course
+@app.cli.command('create-course')
+def create_course():
+    name = input('Enter course name: ')
+    course = Course(name=name)
+    db.session.add(course)
+    db.session.commit()
+    print(f'Course "{name}" created successfully.')
+
+# Command to create a staff member
+@app.cli.command('create-staff')
+def create_staff():
+    name = input('Enter staff name: ')
+    role = input('Enter staff role (Lecturer, TA, Tutor): ')
+    staff = Staff(name=name, role=role)
+    db.session.add(staff)
+    db.session.commit()
+    print(f'Staff member "{name}" with role "{role}" created successfully.')
+
+# Command to assign staff to a course
+@app.cli.command('assign-staff')
+def assign_staff():
+    course_id = int(input('Enter course ID: '))
+    staff_id = int(input('Enter staff ID: '))
+    assignment = CourseStaff(course_id=course_id, staff_id=staff_id)
+    db.session.add(assignment)
+    db.session.commit()
+    print(f'Staff ID "{staff_id}" assigned to Course ID "{course_id}".')
+
+# Command to view course staff
+@app.cli.command('view-course-staff')
+def view_course_staff():
+    course_id = int(input('Enter course ID: '))
+    course = Course.query.get(course_id)
+    if not course:
+        print('Course not found.')
+        return
+    staff_members = course.course_staff
+    if not staff_members:
+        print('No staff assigned to this course.')
+        return
+    print(f'Staff for course "{course.name}":')
+    for cs in staff_members:
+        print(f'- {cs.staff.name} ({cs.staff.role})')
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
