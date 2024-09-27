@@ -91,20 +91,11 @@ def create_app(overrides={}):
     app.app_context().push()
     return app
 
-
-
-
-# Command to create a course
-@app.cli.command('create-course')
-def create_course():
-    name = input('Enter course name: ')
-    course = Course(name=name)
-    db.session.add(course)
-    db.session.commit()
-    print(f'Course "{name}" created successfully.')
+# Staff members can create their own account
+staff_cli = AppGroup('staff', help='Staff object commands')
 
 # Command to create a staff member
-@app.cli.command('create-staff')
+@staff_cli.command('create-staff')
 def create_staff():
     name = input('Enter staff name: ')
     role = input('Enter staff role (Lecturer, TA, Tutor): ')
@@ -113,8 +104,22 @@ def create_staff():
     db.session.commit()
     print(f'Staff member "{name}" with role "{role}" created successfully.')
 
+app.cli.add_command(staff_cli)
+
+# Admins can create courses and assign staff to them
+admin_cli = AppGroup('admin', help='Admin object commands') 
+
+@admin_cli.command('create-course')
+def create_course():
+    name = input('Enter course name: ')
+    course = Course(name=name)
+    db.session.add(course)
+    db.session.commit()
+    print(f'Course "{name}" created successfully.')
+
+
 # Command to assign staff to a course
-@app.cli.command('assign-staff')
+@admin_cli.command('assign-staff')
 def assign_staff():
     course_id = int(input('Enter course ID: '))
     staff_id = int(input('Enter staff ID: '))
@@ -124,7 +129,7 @@ def assign_staff():
     print(f'Staff ID "{staff_id}" assigned to Course ID "{course_id}".')
 
 # Command to view course staff
-@app.cli.command('view-course-staff')
+@admin_cli.command('view-course-staff')
 def view_course_staff():
     course_id = int(input('Enter course ID: '))
     course = Course.query.get(course_id)
@@ -138,6 +143,8 @@ def view_course_staff():
     print(f'Staff for course "{course.name}":')
     for cs in staff_members:
         print(f'- {cs.staff.name} ({cs.staff.role})')
+
+app.cli.add_command(admin_cli)
 
 
 if __name__ == '__main__':
