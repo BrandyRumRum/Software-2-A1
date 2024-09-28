@@ -5,7 +5,10 @@ from flask.cli import with_appcontext, AppGroup
 from App.database import db, get_migrate
 from App.models import *
 from App.main import create_app
-from App.controllers import ( create_user, get_all_users_json, get_all_users, initialize )
+from App.controllers.course import *
+from App.controllers.staff import *
+from App.controllers.coursestaff import *
+from App.controllers import *
 
 
 # This commands file allow you to create convenient CLI commands for testing controllers
@@ -96,13 +99,10 @@ staff_cli = AppGroup('staff', help='Staff object commands')
 
 # Command to create a staff member
 @staff_cli.command('create-staff')
-def create_staff():
+def create_staff_command():
     name = input('Enter staff name: ')
     role = input('Enter staff role (Lecturer, TA, Tutor): ')
-    staff = Staff(name=name, role=role)
-    db.session.add(staff)
-    db.session.commit()
-    print(f'Staff member "{name}" with role "{role}" created successfully.')
+    create_staff(name, role)
 
 app.cli.add_command(staff_cli)
 
@@ -110,39 +110,23 @@ app.cli.add_command(staff_cli)
 admin_cli = AppGroup('admin', help='Admin object commands') 
 
 @admin_cli.command('create-course')
-def create_course():
+def create_course_command():
     name = input('Enter course name: ')
-    course = Course(name=name)
-    db.session.add(course)
-    db.session.commit()
-    print(f'Course "{name}" created successfully.')
+    create_course(name)
 
 
 # Command to assign staff to a course
 @admin_cli.command('assign-staff')
-def assign_staff():
-    course_id = int(input('Enter course ID: '))
-    staff_id = int(input('Enter staff ID: '))
-    assignment = CourseStaff(course_id=course_id, staff_id=staff_id)
-    db.session.add(assignment)
-    db.session.commit()
-    print(f'Staff ID "{staff_id}" assigned to Course ID "{course_id}".')
+def assign_staff_command():
+    course_name = input('Enter course name: ')
+    staff_name = input("Enter staff member's name: ")
+    assign_staff(course_name, staff_name)
 
 # Command to view course staff
 @admin_cli.command('view-course-staff')
-def view_course_staff():
-    course_id = int(input('Enter course ID: '))
-    course = Course.query.get(course_id)
-    if not course:
-        print('Course not found.')
-        return
-    staff_members = course.course_staff
-    if not staff_members:
-        print('No staff assigned to this course.')
-        return
-    print(f'Staff for course "{course.name}":')
-    for cs in staff_members:
-        print(f'- {cs.staff.name} ({cs.staff.role})')
+def view_course_staff_command():
+    course_name = input('Enter course name: ')
+    view_course_staff(course_name)
 
 app.cli.add_command(admin_cli)
 
