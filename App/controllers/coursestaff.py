@@ -6,7 +6,7 @@ def assign_staff(course_name, staff_name):
     staff = Staff.query.filter_by(name=staff_name).first()
 
     if not course or not staff:
-        print("Cannot make assignment")
+        print("Invalid information provided")
         return
 
     course_staff = CourseStaff(course_id=course.id, staff_id=staff.id)

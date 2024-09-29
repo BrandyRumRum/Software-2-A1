@@ -95,19 +95,17 @@ def create_app(overrides={}):
     return app
 
 # Staff members can create their own account
-staff_cli = AppGroup('staff', help='Staff object commands')
+admin_cli = AppGroup('admin', help='Admin object commands') 
 
 # Command to create a staff member
-@staff_cli.command('create-staff')
+@admin_cli.command('create-staff')
 def create_staff_command():
     name = input('Enter staff name: ')
     role = input('Enter staff role (Lecturer, TA, Tutor): ')
     create_staff(name, role)
 
-app.cli.add_command(staff_cli)
 
-# Admins can create courses and assign staff to them
-admin_cli = AppGroup('admin', help='Admin object commands') 
+
 
 @admin_cli.command('create-course')
 def create_course_command():
