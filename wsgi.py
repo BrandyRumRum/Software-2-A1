@@ -94,7 +94,6 @@ def create_app(overrides={}):
     app.app_context().push()
     return app
 
-# Staff members can create their own account
 admin_cli = AppGroup('admin', help='Admin object commands') 
 
 # Command to create a staff member
