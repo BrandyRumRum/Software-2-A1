@@ -9,6 +9,10 @@ def assign_staff(course_name, staff_name):
         print("Invalid information provided")
         return
 
+    existing = CourseStaff.query.filter_by(course_id=course.id, staff_id=staff.id).first()
+    if existing:
+       print(staff_name + " is already assigned to " + course_name) 
+       return
     course_staff = CourseStaff(course_id=course.id, staff_id=staff.id)
     db.session.add(course_staff)
     db.session.commit()
